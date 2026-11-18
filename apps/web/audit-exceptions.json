@@ -1,0 +1,12 @@
+{
+  "_comment": "Each exception needs an advisory URL, a reason, and a review-by date. The audit check fails when an exception expires, so it cannot be forgotten.",
+  "exceptions": [
+    {
+      "advisory": "https://github.com/advisories/GHSA-fc5q-39xc-vjpf",
+      "package": "picomatch",
+      "added": "2026-11-18",
+      "review_by": "2026-12-18",
+      "reason": "ReDoS in picomatch extglob parsing. No patched version exists (advisory range <= 4.0.7, which is the latest release). picomatch is reached only through dev, build and test tooling (vite/vitest, eslint-config-next, next-intl's file watcher) and matches glob patterns written in this repository, never user input. It is not used while serving requests. Re-check for a fixed release at the review date; npm's suggested 'fix' is a major downgrade and is not applied."
+    }
+  ]
+}

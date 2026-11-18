@@ -1,0 +1,81 @@
+# Jyotish Research Platform: local stack (docs/deployment.md section 2).
+#
+#   scripts\init-env.ps1                        # once: creates .env with a random DB password
+#   docker compose -p jyotish-dev up --build -d # development project
+#   docker compose -p jyotish up --build -d     # local-prod project (real data)
+#
+# NEVER run `docker compose -p jyotish down -v`: it deletes the database volume.
+# The project name (-p) prefixes volume names, so dev and local-prod never share data.
+#
+# Security (docs/security.md section 2): host ports are bound to 127.0.0.1 only and the database
+# port is not published at all. There is no setting that changes this.
+
+services:
+  db:
+    image: pgvector/pgvector:pg17
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:?run scripts\init-env.ps1}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?run scripts\init-env.ps1}
+      POSTGRES_DB: ${POSTGRES_DB:?run scripts\init-env.ps1}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "5" }
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+      args:
+        GIT_COMMIT: ${GIT_COMMIT:-unknown}
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      APP_ENV: ${APP_ENV:?run scripts\init-env.ps1}
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:?run scripts\init-env.ps1}
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS:?run scripts\init-env.ps1}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      # AI stays disabled while RUNTIME_MODEL_ID is empty (D-012, D-030). No model ID lives in this file.
+      RUNTIME_PROVIDER: ${RUNTIME_PROVIDER:-}
+      RUNTIME_MODEL_ID: ${RUNTIME_MODEL_ID:-}
+      GROQ_API_KEY: ${GROQ_API_KEY:-}
+    ports:
+      - "127.0.0.1:${API_PORT:-8000}:8000"
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "5" }
+
+  web:
+    build:
+      context: apps/web
+      args:
+        NEXT_PUBLIC_API_BASE: ${NEXT_PUBLIC_API_BASE:?run scripts\init-env.ps1}
+    restart: unless-stopped
+    depends_on:
+      - api
+    ports:
+      - "127.0.0.1:${WEB_PORT:-3000}:3000"
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "5" }
+
+volumes:
+  pgdata:

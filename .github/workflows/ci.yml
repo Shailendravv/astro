@@ -1,0 +1,135 @@
+# CI pipeline (docs/deployment.md section 3). NEVER calls an LLM provider or any paid API:
+# LLM-backed evaluation runs only from the owner's machine (CLAUDE.md prohibited actions).
+#
+# Status: written in M1 and checked locally step by step; it has not yet run on GitHub because the
+# private remote does not exist yet (D-024, T1.2). Action versions are tags; pin them by commit SHA
+# once the repository exists.
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  python:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: pgvector/pgvector:pg17
+        env:
+          POSTGRES_USER: ci
+          POSTGRES_PASSWORD: ci-only-password
+          POSTGRES_DB: ci
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U ci -d ci" --health-interval 5s --health-timeout 5s
+          --health-retries 10
+    env:
+      TEST_DATABASE_URL: postgresql+psycopg://ci:ci-only-password@127.0.0.1:5432/ci
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - run: uv sync --frozen
+      - name: Lint and format (ruff)
+        run: |
+          uv run ruff check .
+          uv run ruff format --check .
+      - name: Types (mypy; strict for engine/)
+        run: uv run mypy
+      - name: Architecture contracts (import-linter, D-021)
+        run: uv run lint-imports
+      - name: No books, env files or large binaries
+        run: uv run python scripts/check_repo_files.py
+      - name: Unit, property and integration tests
+        run: uv run pytest -m "not track_d"
+      - name: Track D stage (deterministic evaluation checks, no LLM; D-022, D-028)
+        # Empty in M1 apart from the layout checks. M2 adds schema and source-fidelity checks, M4
+        # the calculation suites. pytest exits 5 when nothing is collected; that is not a failure
+        # here, any other non-zero code is.
+        run: |
+          set +e
+          uv run pytest -m track_d
+          code=$?
+          if [ "$code" -ne 0 ] && [ "$code" -ne 5 ]; then exit "$code"; fi
+      - name: Python dependency audit
+        run: uv run pip-audit --skip-editable
+
+  web:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm run format:check
+      - name: Unit tests and i18n key check
+        run: npm test
+      - name: Production build
+        env:
+          NEXT_PUBLIC_API_BASE: http://127.0.0.1:8000/api/v1
+        run: npm run build
+      - name: npm audit (high/critical, documented exceptions only)
+        working-directory: .
+        run: node scripts/check-npm-audit.mjs
+
+  secrets:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  images:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build images (tagged with the commit SHA)
+        env:
+          GIT_COMMIT: ${{ github.sha }}
+        run: |
+          cp .env.example .env
+          sed -i "s/^POSTGRES_PASSWORD=.*/POSTGRES_PASSWORD=ci-only-password/" .env
+          docker compose -p jyotish-ci config -q
+          docker compose -p jyotish-ci build
+
+  e2e:
+    # Pull requests only (docs/deployment.md section 3). Runs against the real Compose stack.
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json
+      - name: Start the stack
+        run: |
+          cp .env.example .env
+          sed -i "s/^POSTGRES_PASSWORD=.*/POSTGRES_PASSWORD=ci-only-password/" .env
+          docker compose -p jyotish-ci up --build -d --wait --wait-timeout 180
+      - run: npm ci
+        working-directory: apps/web
+      - run: npx playwright install --with-deps chromium
+        working-directory: apps/web
+      - name: Playwright + axe
+        run: npm run test:e2e
+        working-directory: apps/web
+      - name: Show logs on failure
+        if: failure()
+        run: docker compose -p jyotish-ci logs --no-color --tail=100

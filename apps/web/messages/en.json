@@ -1,0 +1,29 @@
+{
+  "Home": {
+    "title": "Jyotish Research Platform",
+    "subtitle": "Foundation build (milestone M1). No chart calculation exists yet, and nothing on this page is a Jyotish result.",
+    "language": "Language",
+    "english": "English",
+    "hindi": "हिन्दी"
+  },
+  "Health": {
+    "heading": "System status",
+    "checking": "Checking…",
+    "unreachable": "The API cannot be reached. Start the stack with docker compose and reload.",
+    "notConfigured": "The web app has no API address configured.",
+    "overall": "API",
+    "database": "Database",
+    "ephemerisFiles": "Ephemeris files",
+    "libraryMount": "Library mount",
+    "aiFeatures": "AI features",
+    "values": {
+      "ok": "OK",
+      "degraded": "Degraded",
+      "error": "Error",
+      "not_configured": "Not configured yet",
+      "unreachable": "Unreachable",
+      "enabled": "On",
+      "disabled": "Off"
+    }
+  }
+}

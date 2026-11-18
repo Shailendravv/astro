@@ -1,0 +1,18 @@
+# LF line endings everywhere so shell scripts and YAML work inside Linux containers
+# (the repo lives on Windows, in a path that contains a space).
+* text=auto eol=lf
+
+# Windows-only scripts keep CRLF
+*.ps1 text eol=crlf
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Binary files
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+*.se1 binary

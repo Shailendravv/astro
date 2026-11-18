@@ -1,0 +1,134 @@
+[project]
+name = "jyotish-platform"
+version = "0.1.0"
+description = "Research-grade Parashari + KP + Jaimini platform (local, single-user, Release 1)"
+readme = "README.md"
+requires-python = ">=3.12,<3.13"
+# Runtime dependencies are added with `uv add <pkg>` so uv.lock stays the source of truth.
+dependencies = [
+    "fastapi>=0.163.2",
+    "psycopg[binary]>=3.3.9",
+    "pydantic>=2.14.3",
+    "pydantic-settings>=2.16.3",
+    "sqlalchemy>=2.1.9",
+    "uvicorn[standard]>=0.54.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+# `apps/api/jyotish_api` is installed as the top-level package `jyotish_api`.
+packages = ["engine", "ai", "evaluation", "apps/api/jyotish_api"]
+
+# ---------------------------------------------------------------- ruff
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+extend-exclude = ["apps/web"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM", "N", "RUF", "C4", "PT"]
+# The formatter wraps code; long one-line module docstrings are accepted.
+ignore = ["E501"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["engine", "ai", "evaluation", "jyotish_api"]
+
+[tool.ruff.lint.per-file-ignores]
+# Rule tests are named test_<RULE_ID>_<what> (e.g. test_PAR_ASP_0003_...), which is not snake_case.
+"tests/**" = ["N802"]
+
+# ---------------------------------------------------------------- mypy
+[tool.mypy]
+python_version = "3.12"
+check_untyped_defs = true
+warn_unused_ignores = true
+warn_redundant_casts = true
+no_implicit_optional = true
+plugins = ["pydantic.mypy"]
+files = ["engine", "ai", "evaluation", "apps/api/jyotish_api", "scripts", "tests"]
+explicit_package_bases = true
+mypy_path = "apps/api"
+
+[[tool.mypy.overrides]]
+# CLAUDE.md: mypy is strict in engine/.
+module = "engine.*"
+strict = true
+
+# ---------------------------------------------------------------- pytest
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra --strict-markers"
+markers = [
+    "property: Hypothesis property-based tests (run on every commit)",
+    "integration: needs a running database (CI service container or local compose)",
+    "track_d: Track D deterministic evaluation checks (no LLM, run in CI, D-022 / D-028)",
+]
+
+# ---------------------------------------------------------------- import-linter (D-021)
+[tool.importlinter]
+root_packages = ["engine", "ai", "evaluation", "jyotish_api"]
+include_external_packages = true
+
+[[tool.importlinter.contracts]]
+id = "tradition-isolation"
+name = "Parashari, KP and Jaimini engines never import each other (CLAUDE.md rule 2)"
+type = "independence"
+modules = ["engine.parashari", "engine.kp", "engine.jaimini"]
+
+[[tool.importlinter.contracts]]
+id = "engine-layers"
+name = "Engine layering: integration > traditions > shared_charts > astronomy"
+type = "layers"
+layers = [
+    "engine.integration",
+    "engine.parashari | engine.kp | engine.jaimini",
+    "engine.shared_charts",
+    "engine.astronomy",
+]
+
+[[tool.importlinter.contracts]]
+id = "engine-is-pure"
+name = "engine/ is pure: no ai, evaluation, API, database, HTTP or network code"
+type = "forbidden"
+source_modules = ["engine"]
+forbidden_modules = [
+    "ai",
+    "evaluation",
+    "jyotish_api",
+    "sqlalchemy",
+    "psycopg",
+    "fastapi",
+    "uvicorn",
+    "httpx",
+    "requests",
+    "urllib3",
+    "socket",
+]
+
+[[tool.importlinter.contracts]]
+id = "ai-not-upward"
+name = "ai/ must not import the API or the evaluation runner"
+type = "forbidden"
+source_modules = ["ai"]
+forbidden_modules = ["jyotish_api", "evaluation"]
+
+[[tool.importlinter.contracts]]
+id = "evaluation-not-api"
+name = "evaluation/ must not import the API"
+type = "forbidden"
+source_modules = ["evaluation"]
+forbidden_modules = ["jyotish_api"]
+
+[dependency-groups]
+dev = [
+    "httpx>=0.28.1",
+    "hypothesis>=6.170.15",
+    "import-linter>=2.16",
+    "mypy>=2.4.1",
+    "pip-audit>=2.10.1",
+    "pytest>=9.2.0",
+    "ruff>=0.17.5",
+]

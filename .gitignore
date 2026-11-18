@@ -1,0 +1,70 @@
+# ---- Secrets (never commit) ----
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# ---- Books, scans, extracted copyrighted text (never commit; see docs/security.md, docs/decisions.md D-011) ----
+library/
+JyotishLibrary/
+*.pdf
+*.djvu
+*.epub
+*.mobi
+*.tif
+*.tiff
+*.cbz
+knowledge/extracted_text/*
+!knowledge/extracted_text/.gitkeep
+!knowledge/extracted_text/README.md
+
+# ---- Real people's birth data (synthetic data only in the repo) ----
+birth_data_private/
+*.private.json
+*.private.yaml
+
+# ---- Data volumes, backups, ephemeris data files (fetched at build time) ----
+pgdata/
+backups/
+*.dump
+*.sql.gz
+ephe/*.se1
+ephe/*.se2
+ephe/*.eph
+*.bsp
+
+# ---- Python ----
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.hypothesis/
+.coverage
+htmlcov/
+*.egg-info/
+build/
+dist/
+
+# ---- Node / Next.js ----
+node_modules/
+.next/
+out/
+coverage/
+playwright-report/
+test-results/
+*.tsbuildinfo
+next-env.d.ts
+
+# ---- Editor / OS / tool state ----
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+.claude/settings.local.json
+.gstack/
+
+# ---- Evaluation: reports are committed; scratch output is not ----
+evaluation/scratch/
