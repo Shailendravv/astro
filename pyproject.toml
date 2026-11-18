@@ -10,9 +10,13 @@ dependencies = [
     "psycopg[binary]>=3.3.9",
     "pydantic>=2.14.3",
     "pydantic-settings>=2.16.3",
+    "pyyaml>=6.0.3",
     "sqlalchemy>=2.1.9",
     "uvicorn[standard]>=0.54.0",
 ]
+
+[project.scripts]
+jyotish = "jyotish_cli.main:main"
 
 [build-system]
 requires = ["hatchling"]
@@ -20,7 +24,7 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 # `apps/api/jyotish_api` is installed as the top-level package `jyotish_api`.
-packages = ["engine", "ai", "evaluation", "apps/api/jyotish_api"]
+packages = ["engine", "ai", "evaluation", "knowledge", "jyotish_cli", "apps/api/jyotish_api"]
 
 # ---------------------------------------------------------------- ruff
 [tool.ruff]
@@ -34,11 +38,11 @@ select = ["E", "F", "I", "B", "UP", "SIM", "N", "RUF", "C4", "PT"]
 ignore = ["E501"]
 
 [tool.ruff.lint.isort]
-known-first-party = ["engine", "ai", "evaluation", "jyotish_api"]
+known-first-party = ["engine", "ai", "evaluation", "knowledge", "jyotish_cli", "jyotish_api"]
 
 [tool.ruff.lint.per-file-ignores]
 # Rule tests are named test_<RULE_ID>_<what> (e.g. test_PAR_ASP_0003_...), which is not snake_case.
-"tests/**" = ["N802"]
+"tests/**" = ["N802", "PT018"]
 
 # ---------------------------------------------------------------- mypy
 [tool.mypy]
@@ -48,14 +52,24 @@ warn_unused_ignores = true
 warn_redundant_casts = true
 no_implicit_optional = true
 plugins = ["pydantic.mypy"]
-files = ["engine", "ai", "evaluation", "apps/api/jyotish_api", "scripts", "tests"]
+files = ["engine", "ai", "evaluation", "knowledge", "jyotish_cli", "apps/api/jyotish_api", "scripts", "tests"]
 explicit_package_bases = true
-mypy_path = "apps/api"
+mypy_path = "apps/api:tests/unit/rulebase"
 
 [[tool.mypy.overrides]]
-# CLAUDE.md: mypy is strict in engine/.
+# CLAUDE.md: mypy is strict in engine/ only. `strict = true` cannot be scoped to a module (mypy applies
+# it globally), so the flags it stands for are listed here explicitly.
 module = "engine.*"
-strict = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+disallow_untyped_calls = true
+disallow_untyped_decorators = true
+disallow_any_generics = true
+disallow_subclassing_any = true
+no_implicit_reexport = true
+strict_equality = true
+warn_return_any = true
+extra_checks = true
 
 # ---------------------------------------------------------------- pytest
 [tool.pytest.ini_options]
@@ -69,7 +83,7 @@ markers = [
 
 # ---------------------------------------------------------------- import-linter (D-021)
 [tool.importlinter]
-root_packages = ["engine", "ai", "evaluation", "jyotish_api"]
+root_packages = ["engine", "ai", "evaluation", "knowledge", "jyotish_cli", "jyotish_api"]
 include_external_packages = true
 
 [[tool.importlinter.contracts]]
@@ -97,6 +111,8 @@ source_modules = ["engine"]
 forbidden_modules = [
     "ai",
     "evaluation",
+    "knowledge",
+    "jyotish_cli",
     "jyotish_api",
     "sqlalchemy",
     "psycopg",
@@ -113,14 +129,21 @@ id = "ai-not-upward"
 name = "ai/ must not import the API or the evaluation runner"
 type = "forbidden"
 source_modules = ["ai"]
-forbidden_modules = ["jyotish_api", "evaluation"]
+forbidden_modules = ["jyotish_api", "jyotish_cli", "evaluation"]
 
 [[tool.importlinter.contracts]]
 id = "evaluation-not-api"
-name = "evaluation/ must not import the API"
+name = "evaluation/ must not import the API or the CLI"
 type = "forbidden"
 source_modules = ["evaluation"]
-forbidden_modules = ["jyotish_api"]
+forbidden_modules = ["jyotish_api", "jyotish_cli"]
+
+[[tool.importlinter.contracts]]
+id = "knowledge-is-below-ai"
+name = "knowledge/ must not import the engine, ai, evaluation, API or CLI"
+type = "forbidden"
+source_modules = ["knowledge"]
+forbidden_modules = ["engine", "ai", "evaluation", "jyotish_api", "jyotish_cli"]
 
 [dependency-groups]
 dev = [
@@ -131,4 +154,5 @@ dev = [
     "pip-audit>=2.10.1",
     "pytest>=9.2.0",
     "ruff>=0.17.5",
+    "types-pyyaml>=6.0.12.20261113",
 ]

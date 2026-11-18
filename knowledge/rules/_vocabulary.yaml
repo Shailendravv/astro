@@ -1,0 +1,98 @@
+# Controlled topic vocabulary for rule records (docs/rule-schema.md section 3).
+# The 3-letter code appears in rule IDs (PAR-ASP-0001). This file is a taxonomy only: it says which
+# *kinds* of rule exist in which namespace, and contains no Jyotish content. Adding a topic is an
+# ordinary reviewed edit; never reuse a code.
+schema_version: 1
+topics:
+  # ---- settings and mechanics that every tradition must state explicitly (conventions live here too)
+  ayanamsha:
+    code: AYN
+    namespaces: [PARASHARI, KP, JAIMINI, SHARED]
+    description: Ayanamsha choice and calculation
+  node:
+    code: NOD
+    namespaces: [PARASHARI, KP, JAIMINI, SHARED]
+    description: Mean or true lunar node
+  house_system:
+    code: HSE
+    namespaces: [PARASHARI, KP, JAIMINI, SHARED]
+    description: House or cusp system
+  boundary:
+    code: BND
+    namespaces: [PARASHARI, KP, JAIMINI, SHARED]
+    description: Boundary inclusion and exact-arithmetic rules (sign, nakshatra, pada, sub)
+  nakshatra:
+    code: NAK
+    namespaces: [PARASHARI, KP, JAIMINI, SHARED]
+    description: Nakshatra and pada division arithmetic
+  time:
+    code: TIM
+    namespaces: [PARASHARI, KP, JAIMINI, SHARED]
+    description: Time, time zone and birth-time handling
+  dasha:
+    code: DSH
+    namespaces: [PARASHARI, KP, JAIMINI]
+    description: Dasha systems (Vimshottari, others)
+  # ---- Parashari
+  aspect:
+    code: ASP
+    namespaces: [PARASHARI]
+    description: Graha drishti
+  lordship:
+    code: LRD
+    namespaces: [PARASHARI]
+    description: House and sign lordship
+  dignity:
+    code: DIG
+    namespaces: [PARASHARI]
+    description: Exaltation, debilitation, own sign and similar states
+  yoga:
+    code: YOG
+    namespaces: [PARASHARI]
+    description: Yogas
+  varga:
+    code: VRG
+    namespaces: [PARASHARI, SHARED]
+    description: Divisional charts
+  shadbala:
+    code: SBL
+    namespaces: [PARASHARI]
+    description: Shadbala components
+  # ---- KP
+  sub_lord:
+    code: SUB
+    namespaces: [KP]
+    description: Star, sub and sub-sub lords
+  significator:
+    code: SIG
+    namespaces: [KP]
+    description: Significators of houses
+  cusp:
+    code: CUS
+    namespaces: [KP]
+    description: Cusps and cuspal sub-lords
+  ruling_planets:
+    code: RPL
+    namespaces: [KP]
+    description: Ruling planets
+  # ---- Jaimini
+  karaka:
+    code: KRK
+    namespaces: [JAIMINI]
+    description: Chara Karakas
+  rashi_drishti:
+    code: RSD
+    namespaces: [JAIMINI]
+    description: Rashi drishti
+  argala:
+    code: ARG
+    namespaces: [JAIMINI]
+    description: Argala and virodhargala
+  karakamsha:
+    code: KMS
+    namespaces: [JAIMINI]
+    description: Karakamsha
+  chara_dasha:
+    code: CHD
+    namespaces: [JAIMINI]
+    description: "Chara Dasha (gated, see D-008)"

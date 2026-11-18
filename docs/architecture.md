@@ -115,7 +115,8 @@ flowchart TB
 | Prompts | `ai/prompts/` | Versioned prompt templates per mode and language, with a content hash | Be edited without bumping version |
 | Interpretation | `ai/interpretation/` | Build reading requests from facts + retrieved rules/passages; validate structured output; render | Accept output that cites unknown facts/rules/passages |
 | Research workflows | `ai/research_workflows/` | Claude Code–assisted rule extraction and case drafting procedures | Write directly to VERIFIED status |
-| Knowledge | `knowledge/` | Source catalogue, extracted text, rule records (YAML in git), glossary | Hold copyrighted scans in git |
+| Knowledge | `knowledge/` (data) and `knowledge/rulebase/` (Python: schema, validator, lifecycle, approval, history check, runtime retrieval gate; [rule-schema.md](rule-schema.md)) | Source catalogue, extracted text, rule records (YAML in git), glossary | Hold copyrighted scans in git; import the engine, `ai/`, `evaluation/`, the API or the CLI |
+| CLI | `jyotish_cli/` | The `jyotish` command (`rules validate/list/hash/seal/approve` today) | Contain business logic beyond calling `knowledge/` and `evaluation/` |
 | Evaluation | `evaluation/` | Golden datasets, evaluators, rubrics, baselines, reports | Modify a frozen dataset version |
 | API | `apps/api/` | HTTP surface, persistence, orchestration | Contain calculation logic |
 | Web | `apps/web/` | UI in en/hi | Compute astrology client-side |

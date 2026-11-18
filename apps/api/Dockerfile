@@ -16,6 +16,8 @@ COPY pyproject.toml uv.lock README.md ./
 COPY engine ./engine
 COPY ai ./ai
 COPY evaluation ./evaluation
+COPY knowledge ./knowledge
+COPY jyotish_cli ./jyotish_cli
 COPY apps/api ./apps/api
 # Production dependencies only, from the lockfile, with the project installed as a real package.
 RUN uv sync --frozen --no-dev --no-editable

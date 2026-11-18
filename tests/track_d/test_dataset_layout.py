@@ -37,12 +37,3 @@ def test_no_unreviewed_case_files_before_the_schema_exists() -> None:
         for path in (ROOT / "evaluation" / "datasets" / collection).glob("*.y*ml")
     ]
     assert case_files == [], f"cases found before the M2 schema: {case_files}"
-
-
-def test_no_rule_records_before_the_schema_exists() -> None:
-    rule_files = [
-        path
-        for tradition in ("parashari", "kp", "jaimini")
-        for path in (ROOT / "knowledge" / "rules" / tradition).glob("*.y*ml")
-    ]
-    assert rule_files == [], f"rule records found before the M2 schema: {rule_files}"

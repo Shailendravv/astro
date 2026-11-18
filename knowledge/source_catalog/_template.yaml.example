@@ -1,0 +1,20 @@
+# Template only (ignored by the loader: the file name starts with "_" and ends in ".example").
+# Copy to knowledge/source_catalog/<SOURCE_ID>.yaml ONLY for a book the owner has confirmed (Q-014).
+# Claude Code never sets ownership: OWNER_CONFIRMED. Never invent edition, publisher, year or ISBN.
+schema_version: 1
+source_id: SRC-EXAMPLE-V1        # pattern SRC-[A-Z0-9-]+ ; file name must be <source_id>.yaml
+title: "EXAMPLE ONLY - not a real book"
+author: null
+translator: null
+commentator: null
+edition: null                    # exact edition, from the owner's copy
+publisher: null
+year: null
+language: [en]                   # sa | hi | en
+traditions: [GENERAL]            # PARASHARI | KP | JAIMINI | GENERAL
+rights: UNKNOWN                  # PUBLIC_DOMAIN | OWNED_COPY_PERSONAL_USE | LICENSED | UNKNOWN
+rights_notes: null
+ownership: UNCONFIRMED           # UNCONFIRMED until the owner confirms they own this copy
+extraction_method: null          # EMBEDDED_TEXT | OCR | MANUAL
+sha256: null                     # only after ingestion; forbidden while ownership is UNCONFIRMED
+file_path: null                  # absolute path under the library root, outside git

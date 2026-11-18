@@ -156,7 +156,7 @@ A Track D pass shows that the code matches the documented expectation. It does *
 - The judge model scores **only** in deliberate evaluation runs: initial testing (Stage A), future model migrations, and material prompt changes. It never runs on ordinary user requests.
 - **Runtime model, judge model, and research/review model are recorded separately** (data-model §6.3, §6.4, §6.1). They are never treated as interchangeable, even when the same model ID fills two roles.
 - **No model is the sole authority for accepting golden answers it generated or proposed** (D-022, D-030). Golden cases record `drafted_by` and `reviewed_by`. A case with a model (Claude Code, Qwen, or any judge) in `drafted_by` needs owner approval **and** independent evidence (reviewed source passage or independent calculation) to become VERIFIED.
-- When the runtime model and the judge model are the same (Stage A), the run is marked **self-judged** and the higher spot-check rate applies.
+- When the runtime model and the judge model are the same (owner's provisional configuration, Q-018), the run is labelled **SELF_JUDGED** in every report and record, and the higher spot-check rate applies. Self-judged results are **advisory** and cannot independently establish VERIFIED status. The labelling and sampling rules are implemented and tested in `evaluation/policy.py` (pure functions; no model is called).
 - Judge provider, exact judge model ID, judge prompt version + hash, and rubric version + hash are recorded per run and per scored case.
 - **Hindi calibration:** before judge verdicts on `*-hi` suites are trusted, compare them with owner ratings on a Hindi calibration set (PROPOSED: ≥ 90% agreement, Q-013). Until then, Hindi tier 2 verdicts are advisory and every report labels Hindi tier 2 results **"uncalibrated"**. No result may be described as a calibrated Hindi evaluation before calibration is complete (owner direction 2026-11-18). Calibration does **not** block building Hindi functionality or `*-hi` cases.
 
@@ -186,6 +186,8 @@ The framework grows with the project instead of arriving as one late phase:
 | M6 Readings | Tier 1 automatic reading checks (CI with fake provider); `reading-*`, `comparison-*`, `adversarial-*` (en + hi) cases; judge harness for deliberate runs; Hindi calibration set | I | Tier 1 checks only; no paid model calls |
 | M7 Initial evaluation | First deliberate full run with the Groq Qwen runtime (judge = same model, self-judged, Q-018); dataset freeze v1.0.0; baselines | D + I | Track D only |
 | M8 Qwen | Same frozen dataset against Qwen; migration report | D + I | Track D only |
+
+**M2 progress (2026-11-18):** the rule-record and source-catalogue checks are running as a Track D CI stage (`tests/track_d/test_rulebase.py`, `jyotish rules validate --strict`, and the append-only history check; see [rule-schema.md](rule-schema.md) §11 for every code). The real rule set and catalogue are empty until the owner supplies the book inventory (Q-014), so on the real repository they currently pass trivially; the synthetic-rulebase unit tests in `tests/unit/rulebase/` carry the real coverage (a negative test per validator code, mutation-checked).
 
 "From M4" in D-028 refers to the calculation-engine suites, not to every deterministic check. Source-fidelity checks run earlier. A feature is not done until its golden cases exist in the relevant suite ([implementation-plan.md](implementation-plan.md) §1).
 

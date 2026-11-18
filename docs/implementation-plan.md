@@ -95,23 +95,26 @@ Depends on: none.
 
 Depends on: M1.
 
+**M2 status (2026-11-18): IN PROGRESS, not complete.** Built so far (all tested, no provider call, no book ingested): the rule knowledge base schema, validator, lifecycle with owner approval, append-only history check, runtime retrieval gate, source-catalogue schema, the `jyotish rules` command, and the evaluation policy helpers (SELF_JUDGED labelling, Q-012 sampling). Reference: [rule-schema.md](rule-schema.md), decision D-031. **Remaining for the M2 exit:** T2.1b (needs the owner's inventory), T2.2–T2.5 (ingestion, page review, search, glossary), T2.7 (workflow docs), the golden-case schema and validator, the rule-to-DB loader, and the owner approval screen. The M2 exit check ("owner can upload a book, review pages, search it, and see a drafted rule with a citation and a PROVISIONAL golden case") **has not been met**.
+
 - [ ] T2.1 **Split (owner decision on Q-014, 2026-11-18): the owner has not confirmed owning any recommended book; the inventory is UNCONFIRMED.**
-  - [ ] T2.1a *Not blocked:* build the source catalogue schema, the empty inventory template (`knowledge/source_catalog/`), the copyright-check procedure as a checklist, and ingestion/OCR/search infrastructure tested on **synthetic or public-domain test documents only**. No named book is assumed.
+  - [ ] T2.1a *Not blocked* (**partly done:** source-catalogue schema, template and validator are built; the copyright checklist and ingestion/OCR/search infrastructure are not): build the source catalogue schema, the empty inventory template (`knowledge/source_catalog/`), the copyright-check procedure as a checklist, and ingestion/OCR/search infrastructure tested on **synthetic or public-domain test documents only**. No named book is assumed.
   - [ ] T2.1b *Blocked until the owner supplies the inventory (Q-014):* for each owned source, record editions, formats, ISBN, rights (Q-015) and ingest it. Any task that needs a specific book (e.g. K.N. Rao edition, Q-008) waits.
 - [ ] T2.2 Ingestion: checksum, catalogue entry, embedded-text extraction, Tesseract OCR (eng/hin/san), page mapping.
 - [ ] T2.3 Page reviewer UI + API (S9).
 - [ ] T2.4 Passage chunking, FTS, embeddings (local model, D-017), hybrid search.
 - [ ] T2.5 Glossary seed (≈200 core terms, IAST + Devanagari + en/hi); Hindi gloss reviewed by owner.
-- [ ] T2.6 Rule YAML schema + validator CLI (`jyotish rules validate`) + loader to DB.
+- [ ] T2.6 Rule YAML schema + validator CLI (`jyotish rules validate`) + loader to DB. **Done:** schema (three rule kinds, four namespaces, versions, lifecycle), validator with 105 distinct finding codes, CLI (`validate`, `list`, `hash`, `seal`, `approve`), runtime retrieval gate, CI step. **Not done:** the loader that indexes rules into PostgreSQL (needs the data model migration, T2.4).
 - [ ] T2.7 Research workflow docs/skills for Claude Code: "extract candidate rule", "draft golden case", "record conflict", "record open question".
 - [ ] **T2.8 Evaluation increment (D-028), first Track D checks in CI (before M4):**
-  - Source-catalogue checks (metadata, checksum, rights recorded).
-  - Citation existence.
-  - `source-fidelity` checks (SUPPORTS relation, passage review status).
+  - Source-catalogue checks (metadata, checksum, rights recorded). **Done** (schema and validator; the real catalogue is empty, Q-014).
+  - Citation existence. **Done at source level** (every cited source must be catalogued); passage-level existence waits for ingestion (T2.2/T2.4).
+  - `source-fidelity` checks (SUPPORTS relation, passage review status). **Done at rule-record level** (a VERIFIED rule needs a reviewed SUPPORTS passage covered by the owner's approval); cross-check against the passage index waits for T2.4.
+  - Rule-record checks run in CI as a Track D stage (`tests/track_d/test_rulebase.py`) and as `jyotish rules validate --strict` with the append-only history comparison. **Done.**
   - Passage review workflow status checks.
   - Golden-case YAML schema (incl. `drafted_by`, `reviewed_by`, `independent_validation`, `language`, `-HI` twin link) and case validator.
   - Every drafted rule gets at least one PROVISIONAL golden case.
-- [ ] T2.9 Rule review records (`rule_review` with `actor`, `review_type`) and the owner "Approve source & evidence" action. Owner approval is recorded as SOURCE_APPROVAL, not as expert validation (testing.md §7).
+- [ ] T2.9 **(rule review records and the owner approval action done as the CLI `jyotish rules approve`; the UI screen is not built)** Rule review records (`rule_review` with `actor`, `review_type`) and the owner "Approve source & evidence" action. Owner approval is recorded as SOURCE_APPROVAL, not as expert validation (testing.md §7).
 
 **Exit:** owner can upload a book, review pages, search it, and see a drafted rule with a citation and a PROVISIONAL golden case. Source-fidelity and citation checks run in CI.
 

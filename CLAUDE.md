@@ -68,7 +68,9 @@ Read the relevant doc before changing an area. Update it in the same change.
 - Preselecting or defaulting a Jaimini karaka profile (7k/8k) anywhere. The owner decided on 2026-11-18 (Q-006) that the user must always choose explicitly.
 - Treating a PROPOSED convention (D-003–D-010, D-025) or the PROPOSED spot-check rule (Q-012) as accepted, or describing a result built on one as final. Label such results provisional.
 - Describing any Hindi evaluation as "calibrated" before Q-013 calibration is complete. (Hindi development and `-HI` cases are not blocked.)
-- Ingesting any named book before the owner supplies the inventory (Q-014). Do not assume the owner owns any recommended book.
+- Ingesting any named book before the owner supplies the inventory (Q-014). Do not assume the owner owns any recommended book. Never set `ownership: OWNER_CONFIRMED` on a source; only the owner does.
+- Writing an owner approval, a `VERIFIED` or `REJECTED` event, or any `recorded_via: CLI_INTERACTIVE` entry by hand, editing a recorded rule version/review/lifecycle event, or deleting a rule file (`docs/rule-schema.md` §7).
+- Describing a self-judged evaluation run as anything but SELF_JUDGED, or treating a judge verdict (self-judged or not) as establishing VERIFIED.
 - Answering an Open question (Q-NNN) by assumption, or changing an ACCEPTED decision without a superseding entry.
 - Bypassing `PayloadMinimiser` or adding full-precision positions, cusps, ayanamsha values, or IDs to provider payloads.
 - Running LLM-backed evaluation suites or any paid API call without the owner's explicit go-ahead.
@@ -89,7 +91,7 @@ Read the relevant doc before changing an area. Update it in the same change.
 
 ## Workflows
 
-- **Add a rule:** search library → draft YAML (PROVISIONAL) with citation_id + quote, noting any ambiguity or conflict → implement in the tradition engine → tests with rule ID → golden case(s) → ask the owner to review the cited passage and evidence (source approval, not specialist validation).
+- **Add a rule:** search library → draft the record in `knowledge/rules/<namespace>/` as DRAFT or PROVISIONAL (format and lifecycle: `docs/rule-schema.md`; `created_by: {actor: CLAUDE_CODE}`) with citation_id + quote + page, noting any ambiguity or conflict in `ambiguity_notes` → `uv run jyotish rules seal <RULE_ID>` then `uv run jyotish rules validate` → implement in the tradition engine → tests with rule ID → golden case(s) → ask the owner to review the cited passage and evidence and to run `jyotish rules approve` themselves (source approval, not specialist validation). **Never** hand-write an `OWNER` review, a `VERIFIED` event, `recorded_via: CLI_INTERACTIVE`, or `independent_validation: RECORDED`; never edit a recorded version, review or event (append a new version instead); keep disagreeing sources as separate records linked with `CONFLICTS_WITH`/`ALTERNATIVE_READING`.
 - **Add a golden case:** YAML in `evaluation/datasets/<collection>/`, status PROVISIONAL, with evidence, acceptable alternatives, `independent_validation: NONE` unless one is actually recorded, and `drafted_by` as structured entries (e.g. `{actor: CLAUDE_CODE}`, or `{actor: MODEL, provider: <provider>, model_id: <exact ID returned>}` when a runtime/judge model drafted it). Reading/comparison/adversarial cases get a Hindi twin (`-HI`). Never add it to a frozen version.
 - **Change a prompt:** new version file + bump; run `reading-*`, `comparison-*`, `adversarial-*` (en + hi) only after owner approval of cost.
 - **Change a convention:** decision entry (or History line if PROPOSED) → new profile version → tests for the new option → old charts untouched.
@@ -117,4 +119,14 @@ Working as of M1 (run from the repo root, quote the path: it contains a space):
 | Web e2e + axe (stack must be up) | `npm --prefix apps/web run test:e2e` |
 | npm audit gate | `node scripts/check-npm-audit.mjs` |
 
-Not built yet (do not run or invent): `uv run jyotish rules validate` (M2, T2.6), `uv run jyotish eval run …` (M3).
+Rule knowledge base (M2):
+
+| Task | Command |
+|---|---|
+| Validate all rule and source records | `uv run jyotish rules validate` (`--strict` in CI, `--format json`) |
+| Also check recorded history is append-only | `uv run jyotish rules validate --against <git-ref>` |
+| Status per rule and whether retrieval would serve it | `uv run jyotish rules list` |
+| Write missing content hashes (never overwrites) | `uv run jyotish rules seal <RULE_ID>` |
+| **Owner only**, interactive terminal | `uv run jyotish rules approve <RULE_ID> --version N [--reject --reason "…"]` |
+
+Not built yet (do not run or invent): `uv run jyotish eval run …` (M3), `jyotish ingest` (M2, T2.2).

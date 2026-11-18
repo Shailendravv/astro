@@ -42,7 +42,7 @@ Git hosting: PROPOSED private GitHub repository with GitHub Actions (D-024).
 7. Security: gitleaks, `pip-audit`, and `node scripts/check-npm-audit.mjs` (fails on any high/critical npm advisory except those listed in `apps/web/audit-exceptions.json`, each with a reason and a review-by date; an expired exception fails the build). Also `scripts/check_repo_files.py` (no books, env files or large binaries).
 8. Build images (tagged with commit SHA).
 
-**M1 state (2026-11-18):** the workflow is `.github/workflows/ci.yml`. Every step was run locally and passed, but the workflow has **not run on GitHub** because the private remote does not exist yet (D-024, T1.2). Base images and Actions are referenced by tag; pin them by digest/commit SHA once the repository exists (security.md §2). The Track D stage exists and runs only layout checks until M2.
+**M1 state (2026-11-18):** the workflow is `.github/workflows/ci.yml`. Every step was run locally and passed, but Claude Code has **no evidence the workflow has run on GitHub** (the remote `origin` now exists, see §9, but `gh` is not logged in here, so CI results cannot be read; the owner should check the Actions tab) (D-024, T1.2). M2 added the rule validation and append-only history steps, which have only been run locally. Base images and Actions are referenced by tag; pin them by digest/commit SHA once the repository exists (security.md §2). The Track D stage exists and runs only layout checks until M2.
 
 **Never in CI:** LLM-backed evaluation suites (cost, secrets). They run manually from the owner's machine (`jyotish eval run …`) and their reports are committed under `evaluation/reports/`.
 
@@ -125,7 +125,9 @@ A local single-user app needs little monitoring, but the following must exist:
 
 ## 9. First-time Git remote setup (T1.2, D-024)
 
-State on 2026-11-18: the local repository exists on branch `main`, but **no remote** exists and the GitHub CLI (`gh`) is **not logged in**, so nothing has been pushed and GitHub CI has not run. The repository **must be created private** (Swiss Ephemeris AGPL, personal-data and copyright rules; [licensing.md](licensing.md) §2).
+Update 2026-11-18 (later the same day): the owner has since added the remote `origin` (`https://github.com/Shailendravv/astro.git`) and pushed `main` (the M1 baseline, commit `71677fa`); M2 work is on branch `feature/sh_18_11_26`. Claude Code **cannot verify** from this machine that the repository is private (`gh` is not logged in here) or what GitHub CI reported. The owner should confirm both on GitHub (Settings → General → Danger Zone shows the visibility; the Actions tab shows CI). The text below is the original instruction, kept for the record.
+
+Earlier state on 2026-11-18: the local repository existed on branch `main`, but **no remote** existed and the GitHub CLI (`gh`) was **not logged in**, so nothing had been pushed and GitHub CI had not run. The repository **must be created private** (Swiss Ephemeris AGPL, personal-data and copyright rules; [licensing.md](licensing.md) §2).
 
 **Option A: GitHub CLI** (run in PowerShell from `D:\AI Projects\astro`)
 

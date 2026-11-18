@@ -194,12 +194,15 @@ Fact ID grammar: `<tradition>.<topic>.<subject>[.<qualifier>…]`, lowercase, do
 | embedding | vector(N) | N fixed by chosen embedding model |
 | review_status | enum | derived: lowest status of spanned pages |
 
-### 4.4 `rule` (source of truth: `knowledge/rules/<tradition>/<RULE_ID>.yaml`)
+### 4.4 `rule` (source of truth: `knowledge/rules/<namespace>/<RULE_ID>.yaml`)
+
+> **Update 2026-11-18 (D-031, PROPOSED):** the rule record gained a `SHARED` namespace (`SHR`), a `rule_type` (`CALCULATION_RULE`, `CALCULATION_CONVENTION`, `INTERPRETIVE_RULE`), a `DRAFT` status, per-version content with content hashes, and append-only `lifecycle` events beside `reviews`. The authoritative field-by-field reference, lifecycle, examples and validator codes are in [rule-schema.md](rule-schema.md). The table below keeps the original field list; where they differ, rule-schema.md governs.
 
 | Field | Type | Rules |
 |---|---|---|
-| rule_id | text | PK. Pattern `(PAR\|KP\|JAI)-[A-Z]{3}-\d{4}`, e.g. `PAR-YOG-0012`; prefix must match tradition |
-| tradition | enum | PARASHARI, KP, JAIMINI |
+| rule_id | text | PK. Pattern `(PAR\|KP\|JAI\|SHR)-[A-Z]{3}-\d{4}`, e.g. `PAR-YOG-0012`; prefix must match the namespace |
+| namespace (was `tradition`) | enum | PARASHARI, KP, JAIMINI, SHARED |
+| rule_type | enum | CALCULATION_RULE, CALCULATION_CONVENTION, INTERPRETIVE_RULE (kept apart; D-031) |
 | topic | text | controlled vocabulary (aspect, lordship, yoga, varga, dasha, sub_lord, significator, karaka, argala…) |
 | terms | text[] | glossary keys |
 | statement | text | plain-language rule |
@@ -207,8 +210,8 @@ Fact ID grammar: `<tradition>.<topic>.<subject>[.<qualifier>…]`, lowercase, do
 | exceptions | jsonb | list |
 | formal_spec | text | testable spec (pseudo-code or predicate) |
 | interpretation_notes | text | |
-| status | enum | PROVISIONAL, VERIFIED, CONFLICTING_SOURCES, REJECTED |
-| version | int | |
+| status | enum | DRAFT, PROVISIONAL, VERIFIED, CONFLICTING_SOURCES, REJECTED. Kept per version: the status of a version is the last lifecycle event's target |
+| version | int | Versions are append-only; each has a `content_hash`. Reviews and approvals are bound to a version and its hash |
 | implemented_in | text[] | code references (filled by tooling) |
 | tests | text[] | test IDs (filled by tooling) |
 | independent_validation | enum | `NONE` (default) or `RECORDED`. `RECORDED` only when at least one `rule_review` of type INDEPENDENT_REVIEW or INDEPENDENT_CALCULATION exists. Never set by assumption. |
@@ -346,7 +349,7 @@ Covers plan §12 run metadata. Runtime generation and judging are recorded **sep
 | judge_prompt_version_id | uuid | nullable → `prompt_version` (purpose JUDGE); hash inherited |
 | rubric_version_ids | uuid[] | → `rubric_version`; hashes inherited |
 | repeats | int | |
-| self_judged | bool | true when runtime and judge are the same provider + model ID |
+| self_judged | bool | true when runtime and judge are the same provider + model ID. Reports label such a run **SELF_JUDGED** (`evaluation/policy.py`, owner decision on Q-018): the 25% spot-check rate applies, every failure is reviewed, and its results are advisory and cannot independently establish VERIFIED |
 | aggregate | jsonb | per suite, tradition, language, tier |
 | spot_check_sample | jsonb | per suite and language: `{method, seed, eligible_count, sample_size, selected_case_ids}` (testing.md §6.4, Q-012) |
 | baseline_run_id | uuid | nullable |
